@@ -6,19 +6,19 @@ from django.db import models
 
 
 GENRES = (
-    ('adventure', 'Adventure'),
-    ('romance', 'Romance'),
-    ('thriller', 'Thriller'),
-    ('fantasy', 'Fantasy'),
-)
+        ('adventure', 'Adventure'),
+        ('romance', 'Romance'),
+        ('thriller', 'Thriller'),
+        ('fantasy', 'Fantasy'),
+    )
 
 
 class Movie(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255, verbose_name=_('Название фильма'))
-    genre = MultiSelectField(choices=GENRES, verbose_name=_('Жанр'))
+    genre = MultiSelectField(choices=GENRES, max_length=120, verbose_name=_('Жанр'))
     age_rate = models.PositiveSmallIntegerField(verbose_name=_('Возрастное ограничение'))
-    rating = models.IntegerField(
+    rating = models.FloatField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         verbose_name=_('Отзыв')
     )
@@ -30,3 +30,6 @@ class Movie(models.Model):
         ordering = ("-created_at",)
         verbose_name = _('Фильм')
         verbose_name_plural = _('Фильмы')
+
+    def __str__(self):
+        return f"{self.title}"

@@ -1,18 +1,29 @@
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import Http404
 
-from cinemas import models, serializers
+from cinemas import models, serializers, services
 
 
-class CinemaViewSet(ModelViewSet):
-    order = models.Cinema
+class CinemaView(APIView):
+    services = services.CinemaServices()
 
-    serializer_class = serializers.CinemaSerializer
-    queryset = models.Cinema.objects.all()
+    def get(self, request, *args, **kwargs):
+        cinemas = self.services.get_cinemas()
+        serializer = serializers.CinemaSerializer(cinemas, many=True)
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        wrapped_data = {'cinemas': serializer.data}
+        return Response(serializer.data)
 
-        return Response(wrapped_data)
+
+class RetrieveCinemaView(APIView):
+    model = models.Cinema
+
+    def get(self, request, *args, **kwargs):
+        try:
+            cinema = self.model.objects.get(pk=kwargs['pk'])
+            print('cinema', cinema)
+        except self.model.DoesNotExist:
+            raise Http404("Такого кинотеатра не существует")
+        serializer = serializers.CinemaSerializer(cinema)
+
+        return Response(serializer.data)

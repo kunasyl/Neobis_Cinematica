@@ -29,6 +29,9 @@ class Cinema(models.Model):
         verbose_name = _('Кинотеатр')
         verbose_name_plural = _('Кинотеатры')
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 class Room(models.Model):
     id = models.AutoField(primary_key=True)
@@ -51,6 +54,9 @@ class Room(models.Model):
         verbose_name = _('Зал')
         verbose_name_plural = _('Залы')
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 class Seat(models.Model):
     id = models.AutoField(primary_key=True)
@@ -71,3 +77,6 @@ class Seat(models.Model):
         ordering = ("-created_at",)
         verbose_name = _('Место')
         verbose_name_plural = _('Места')
+
+    def __str__(self):
+        return f"{self.row} ряд, {self.seat} место"

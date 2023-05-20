@@ -9,3 +9,4 @@ class CinemaSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Cinema
         fields = ('id', 'name', 'address', 'city', 'schedule')
+        depth = 1

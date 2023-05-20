@@ -32,7 +32,13 @@ class Showtime(models.Model):
     price_adult = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена взрослого билета'))
     price_child = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена детского билета'))
     price_student = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена студенческого билета'))
-    price_vip = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена VIP билета'))
+    price_vip = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name=_('Цена VIP билета')
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,6 +47,9 @@ class Showtime(models.Model):
         ordering = ("-created_at",)
         verbose_name = _('Сеанс')
         verbose_name_plural = _('Сеансы')
+
+    def __str__(self):
+        return f"{self.movie_id} - {self.cinema_id}, {self.room_id}"
 
 
 class Ticket(models.Model):
