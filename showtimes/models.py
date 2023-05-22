@@ -6,6 +6,7 @@ from django.db import models
 from . import choices
 from movies.models import Movie
 from cinemas.models import Cinema, Room, Seat
+from users.models import User
 
 
 class Showtime(models.Model):
@@ -29,6 +30,7 @@ class Showtime(models.Model):
         related_name='cinema_showtimes',
         verbose_name=_('Кинотеатр')
     )
+    tickets_sold = models.PositiveSmallIntegerField(default=0, verbose_name=_('Количество проданных билетов'))
     price_adult = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена взрослого билета'))
     price_child = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена детского билета'))
     price_student = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Цена студенческого билета'))
@@ -70,6 +72,21 @@ class Ticket(models.Model):
         choices=choices.PriceAges.choices,
         max_length=20,
         verbose_name=_('Ценовой возраст')
+    )
+    user_id = models.ForeignKey(
+        to=User,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='user_tickets',
+        verbose_name=_('Пользователь')
+    )
+    status = models.CharField(
+        choices=choices.TicketStatuses.choices,
+        blank=True,
+        null=True,
+        max_length=50,
+        verbose_name=_('Статус')
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

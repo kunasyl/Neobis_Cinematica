@@ -14,6 +14,16 @@ class CinemaView(APIView):
 
         return Response(serializer.data)
 
+    def post(self, request, *args, **kwargs):
+        serializer = serializers.CinemaSerializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            valid_serializer = serializer.save()
+
+            return Response({"success": "Cinema '{}' created successfully".format(valid_serializer.id)})
+
+        return Response(serializer.errors)
+
 
 class RetrieveCinemaView(APIView):
     model = models.Cinema

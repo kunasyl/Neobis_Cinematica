@@ -10,3 +10,7 @@ class CinemaSerializer(serializers.ModelSerializer):
         model = models.Cinema
         fields = ('id', 'name', 'address', 'city', 'schedule')
         depth = 1
+
+
+class SeatSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()

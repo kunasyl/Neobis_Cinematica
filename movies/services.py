@@ -9,3 +9,9 @@ class MovieServices:
 
     def get_movies(self):
         return self.movie_repos.get_movies()
+
+    def get_soon_movies(self, max_days=30):
+        """
+        Returns movies that will be soon (premiere) in a month by default.
+        """
+        return self.movie_repos.get_soon_movies(max_days=max_days)
