@@ -50,36 +50,15 @@ class CreateTicketView(APIView):
             'showtime_id': kwargs['pk'],
             'user_id': request.user.id
         }
-        # if isinstance(request.data, list):
-        #     serializer = serializers.TicketSerializer(data=request.data, many=True, context=context)
-        # else:
-        serializer = serializers.TicketSerializer(data=request.data, context=context)
+
+        if isinstance(request.data, list):
+            serializer = serializers.TicketSerializer(data=request.data, many=True, context=context)
+        else:
+            serializer = serializers.TicketSerializer(data=request.data, context=context)
 
         if serializer.is_valid(raise_exception=True):
-            valid_serializer = serializer.save()
-            return Response({"success": "Ticket '{}' created successfully".format(valid_serializer.id)})
+            serializer.save()
+            return Response({"success": "Ticket(s) created successfully"})
 
         return Response(serializer.errors)
-
-
-# class ShowtimeRoomsView(ListAPIView):
-#     model = models.Room
-#     serializer_class = serializers.RoomSerializer
-#     ordering = ('name',)
-#
-#     def get_queryset(self):
-#         showtime_id = self.kwargs.get('pk')
-#         queryset = self.model.objects.filter(showtime_id=showtime_id)
-#         return queryset
-#
-#
-# class RetrieveRoom(APIView):
-#     def get(self, request, *args, **kwargs):
-#         try:
-#             showtime = self.model.objects.get(pk=kwargs['pk'])
-#         except self.model.DoesNotExist:
-#             raise Http404("Такого сеанса не существует")
-#         serializer = serializers.ShowtimeSerializer(showtime)
-#
-#         return Response(serializer.data)
 

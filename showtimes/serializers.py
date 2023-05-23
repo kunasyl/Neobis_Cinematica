@@ -19,13 +19,6 @@ class ShowtimeSerializer(serializers.ModelSerializer):
     #     return obj.showtime_tickets.count()
 
 
-# class RoomSerializer(serializers.ModelSerializer):
-#     id = serializers.IntegerField(read_only=True)
-#
-#     class Meta:
-#         model = models.Room
-#         fields = ('id', 'name', 'cinema_id', 'place_count', 'row_count', 'seat_count')
-
 class RetrieveTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ticket
@@ -49,20 +42,14 @@ class TicketSerializer(serializers.ModelSerializer):
         """
         Create a ticket with additionally creating a seat.
         """
-        # created_tickets = []
-        # print(validated_data)
-
-        # for data in validated_data:
-        #     print(data)
-        #     print(type(data))
         showtime_id = self.context.get('showtime_id')
         showtime = models.Showtime.objects.get(id=showtime_id)
+        showtime.tickets_sold += 1
+        showtime.save()
 
         room_id = showtime.room_id
         row = validated_data.pop('row', None)
         place = validated_data.pop('place', None)
-        # row = data['row']
-        # place = data['place']
         seat = cinemas_models.Seat(room_id=room_id, row=row, place=place)
         seat.save()
 
@@ -73,14 +60,8 @@ class TicketSerializer(serializers.ModelSerializer):
             showtime_id=showtime,
             seat_id=seat,
             price_age=validated_data.pop('price_age'),
-            # price_age=data['price_age'],
             user_id=user,
             **validated_data
-            # **data
         )
-
-            # created_tickets.append(ticket)
-
-        # return created_tickets
 
         return ticket
