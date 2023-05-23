@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from . import models
+from . import models, choices
+from cinemas import models as cinemas_models
+from users import models as users_models
 
 
 class ShowtimeSerializer(serializers.ModelSerializer):
@@ -17,25 +19,68 @@ class ShowtimeSerializer(serializers.ModelSerializer):
     #     return obj.showtime_tickets.count()
 
 
+# class RoomSerializer(serializers.ModelSerializer):
+#     id = serializers.IntegerField(read_only=True)
+#
+#     class Meta:
+#         model = models.Room
+#         fields = ('id', 'name', 'cinema_id', 'place_count', 'row_count', 'seat_count')
+
+class RetrieveTicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Ticket
+        fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status')
+
+
 class TicketSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
-
+    showtime_id = serializers.IntegerField(read_only=True)
+    seat_id = serializers.IntegerField(read_only=True)
+    row = serializers.IntegerField(write_only=True)
+    place = serializers.IntegerField(write_only=True)
+    price_age = serializers.ChoiceField(choices=choices.PriceAges.choices)
+    user_id = serializers.UUIDField(read_only=True)
 
     class Meta:
         model = models.Ticket
-        fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', ' status')
+        fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status', 'row', 'place',)
 
     def create(self, validated_data):
         """
         Create a ticket with additionally creating a seat.
         """
-        ticket_data = validated_data.pop('seat_id')
+        # created_tickets = []
+        # print(validated_data)
 
-        order_items_data = validated_data.pop('order_items')
-        order = models.Order.objects.create(**validated_data)
-        for order_item_data in order_items_data:
-            order_item_data.pop('order_id', None)
-            models.OrderItem.objects.create(order_id=order, **order_item_data)
+        # for data in validated_data:
+        #     print(data)
+        #     print(type(data))
+        showtime_id = self.context.get('showtime_id')
+        showtime = models.Showtime.objects.get(id=showtime_id)
 
-        return order
+        room_id = showtime.room_id
+        row = validated_data.pop('row', None)
+        place = validated_data.pop('place', None)
+        # row = data['row']
+        # place = data['place']
+        seat = cinemas_models.Seat(room_id=room_id, row=row, place=place)
+        seat.save()
 
+        user_id = self.context.get('user_id')
+        user = users_models.User.objects.get(id=user_id)
+
+        ticket = models.Ticket.objects.create(
+            showtime_id=showtime,
+            seat_id=seat,
+            price_age=validated_data.pop('price_age'),
+            # price_age=data['price_age'],
+            user_id=user,
+            **validated_data
+            # **data
+        )
+
+            # created_tickets.append(ticket)
+
+        # return created_tickets
+
+        return ticket

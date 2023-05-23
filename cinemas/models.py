@@ -42,9 +42,9 @@ class Room(models.Model):
         related_name='cinema_rooms',
         verbose_name=_('Кинотеатр')
     )
-    place_count = models.PositiveSmallIntegerField(verbose_name=_('Количество мест'))
+    seat_count = models.PositiveSmallIntegerField(verbose_name=_('Количество мест'))
     row_count = models.PositiveSmallIntegerField(verbose_name=_('Количество рядов'))
-    seat_count = models.PositiveSmallIntegerField(verbose_name=_('Количество мест в ряде'))
+    place_count = models.PositiveSmallIntegerField(verbose_name=_('Количество мест в ряде'))
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,6 +53,15 @@ class Room(models.Model):
         ordering = ("-created_at",)
         verbose_name = _('Зал')
         verbose_name_plural = _('Залы')
+
+    def save(self, *args, **kwargs):
+        is_new = True if not self.id else False
+        super(Room, self).save(*args, **kwargs)
+        if is_new:
+            seats = [Seat(
+                room_id=self, row=row, place=place
+            ) for row in range(1, self.row_count) for place in range(1, self.place_count)]
+            Seat.objects.bulk_create(seats)
 
     def __str__(self):
         return f"{self.name}"
@@ -67,7 +76,7 @@ class Seat(models.Model):
         verbose_name=_('Зал')
     )
     row = models.PositiveSmallIntegerField(verbose_name=_('Ряд'))
-    seat = models.PositiveSmallIntegerField(verbose_name=_('Номер кресла в ряду'))
+    place = models.PositiveSmallIntegerField(verbose_name=_('Номер кресла в ряду'))
     is_vip = models.BooleanField(default=False, verbose_name=_('Вип место'))
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,4 +88,4 @@ class Seat(models.Model):
         verbose_name_plural = _('Места')
 
     def __str__(self):
-        return f"{self.row} ряд, {self.seat} место"
+        return f"{self.row} ряд, {self.place} место"

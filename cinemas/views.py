@@ -1,8 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import Http404
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from cinemas import models, serializers, services
+from showtimes import serializers as showtime_serializers
 
 
 class CinemaView(APIView):
@@ -37,3 +40,18 @@ class RetrieveCinemaView(APIView):
         serializer = serializers.CinemaSerializer(cinema)
 
         return Response(serializer.data)
+
+
+class CinemaShowtimesView(APIView):
+    services = services.CinemaServices()
+
+    def get(self, request, *args, **kwargs):
+        showtimes = self.services.get_cinema_showtimes(cinema_id=kwargs['pk'])
+        serializer = showtime_serializers.ShowtimeSerializer(showtimes, many=True)
+
+        return Response(serializer.data)
+
+
+def showtime_redirect(request, *args, **kwargs):
+    redirect_url = reverse('showtime', args=[kwargs['showtime_id']])
+    return HttpResponseRedirect(redirect_url)

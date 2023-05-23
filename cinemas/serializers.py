@@ -14,3 +14,7 @@ class CinemaSerializer(serializers.ModelSerializer):
 
 class SeatSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
+
+    class Meta:
+        model = models.Seat
+        fields = ('id', 'room_id', 'row', 'seat', 'is_vip', )

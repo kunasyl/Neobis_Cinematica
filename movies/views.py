@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from rest_framework.filters import OrderingFilter
 from django.http import Http404
+from rest_framework.permissions import IsAdminUser
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from movies import models, serializers, services
 from showtimes import serializers as showtime_serializers
@@ -19,6 +22,12 @@ class MovieView(ListCreateAPIView):
     ordering = ('-start_date',)
     filterset_class = MovieFilter
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return []  # No permissions required for GET requests
+        else:
+            return [IsAdminUser()]
+
     def post(self, request, *args, **kwargs):
         serializer = serializers.MovieSerializer(data=request.data)
 
@@ -28,7 +37,6 @@ class MovieView(ListCreateAPIView):
             return Response({"success": "Movie '{}' created successfully".format(valid_serializer.id)})
 
         return Response(serializer.errors)
-
 
 
 class SoonMovieView(ListCreateAPIView):
@@ -46,7 +54,6 @@ class RetrieveMovieView(APIView):
     def get(self, request, *args, **kwargs):
         try:
             cinema = self.model.objects.get(pk=kwargs['pk'])
-            print('cinema', cinema)
         except self.model.DoesNotExist:
             raise Http404("Такого кинотеатра не существует")
         serializer = serializers.MovieSerializer(cinema)
@@ -63,5 +70,9 @@ class MovieShowtimesView(APIView):
 
         return Response(serializer.data)
 
+
+def showtime_redirect(request, *args, **kwargs):
+    redirect_url = reverse('showtime', args=[kwargs['showtime_id']])
+    return HttpResponseRedirect(redirect_url)
 
 

@@ -75,16 +75,13 @@ class Ticket(models.Model):
     )
     user_id = models.ForeignKey(
         to=User,
-        blank=True,
-        null=True,
         on_delete=models.CASCADE,
         related_name='user_tickets',
         verbose_name=_('Пользователь')
     )
     status = models.CharField(
         choices=choices.TicketStatuses.choices,
-        blank=True,
-        null=True,
+        default=choices.TicketStatuses.Reserved,
         max_length=50,
         verbose_name=_('Статус')
     )

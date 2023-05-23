@@ -9,11 +9,13 @@ from django.db import models
 
 
 GENRES = (
-        ('adventure', 'Adventure'),
-        ('romance', 'Romance'),
-        ('thriller', 'Thriller'),
-        ('fantasy', 'Fantasy'),
-    )
+    ('adventure', 'Приключения'),
+    ('romance', 'Романтика'),
+    ('thriller', 'Триллер'),
+    ('fantasy', 'Фантастика'),
+    ('drama', 'Драма'),
+    ('Horror', 'Ужасы'),
+)
 
 
 class Movie(models.Model):
