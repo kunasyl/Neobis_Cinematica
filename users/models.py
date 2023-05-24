@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from . import choices
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None):
@@ -90,7 +92,7 @@ class Feedback(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(
         to=User,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name='user_feedbacks',
         verbose_name=_('Пользователь')
     )
@@ -109,4 +111,59 @@ class Feedback(models.Model):
         return f"{self.user_id} - {self.title}"
 
 
+class Discount(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.OneToOneField(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='user_discounts',
+        verbose_name=_('Пользователь')
+    )
+    tickets_bought = models.PositiveIntegerField(verbose_name=_('Количество купленных билетов'))
+    discount_count = models.FloatField(default=0, verbose_name='Сумма бонусов')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Бонус')
+        verbose_name_plural = _('Бонусы')
+
+    def __str__(self):
+        return f"{self.user_id} - {self.discount_count}"
+
+
+class PurchaseHistory(models.Model):
+    id = models.AutoField(primary_key=True)
+    ticket_id = models.OneToOneField(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='ticket_purchases',
+        verbose_name=_('Пользователь')
+    )
+    pay_status = models.CharField(
+        choices=choices.PayStatuses.choices,
+        default=choices.PayStatuses.Waiting,
+        max_length=50,
+        verbose_name=_('Статус покупки')
+    )
+    user_id = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='user_purchases',
+        verbose_name=_('Пользователь')
+    )
+    discount_used = models.PositiveIntegerField(verbose_name=_('Сумма использованных бонусов'))
+    discount_added = models.PositiveIntegerField(verbose_name=_('Сумма дополненных бонусов'))
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _('История покупок')
+        verbose_name_plural = _('Истории покупок')
+
+    def __str__(self):
+        return f"{self.ticket_id}, {self.user_id} - {self.pay_status}"
 
