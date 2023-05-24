@@ -85,3 +85,28 @@ class User(AbstractBaseUser, PermissionsMixin):
         # return token.decode('utf-8')
         return token
 
+
+class Feedback(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(
+        to=User,
+        on_delete=models.PROTECT,
+        related_name='user_feedbacks',
+        verbose_name=_('Пользователь')
+    )
+    title = models.CharField(max_length=255)
+    text = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _('Отзыв')
+        verbose_name_plural = _('Отзывы')
+
+    def __str__(self):
+        return f"{self.user_id} - {self.title}"
+
+
+

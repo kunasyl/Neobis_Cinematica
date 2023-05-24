@@ -23,6 +23,7 @@ class RetrieveTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ticket
         fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status')
+        depth = 1
 
 
 class TicketSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from django.http import Http404
 
@@ -45,6 +45,8 @@ class TicketView(ListAPIView):
 
 
 class CreateTicketView(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def post(self, request, *args, **kwargs):
         context = {
             'showtime_id': kwargs['pk'],
