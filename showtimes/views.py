@@ -3,8 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from django.http import Http404
+from rest_framework import status
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 
-from . import models, serializers
+from . import models, serializers, permissions
 
 
 class ShowtimeView(ListCreateAPIView):
@@ -37,30 +40,57 @@ class RetrieveShowtimeView(APIView):
         return Response(serializer.data)
 
 
-class TicketView(ListAPIView):
-    queryset = models.Ticket.objects.all()
-    serializer_class = serializers.RetrieveTicketSerializer
-    ordering = ('-created_at',)
-    permission_classes = (IsAdminUser,)
+class TicketView(APIView):
+    permission_classes = (permissions.IsTicketOwner, )
 
+    def get(self, request, *args, **kwargs):
+        try:
+            ticket = models.Ticket.objects.get(user_id=request.user)
+        except self.model.DoesNotExist:
+            raise Http404("У вас нет билетов")
+        serializer = serializers.RetrieveTicketSerializer(ticket)
 
-class CreateTicketView(APIView):
-    permission_classes = (IsAuthenticated, )
+        return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
+        """
+        Create ticket for reservation only.
+        """
         context = {
             'showtime_id': kwargs['pk'],
             'user_id': request.user.id
         }
 
         if isinstance(request.data, list):
-            serializer = serializers.TicketSerializer(data=request.data, many=True, context=context)
+            serializer = serializers.CreateTicketSerializer(data=request.data, many=True, context=context)
         else:
-            serializer = serializers.TicketSerializer(data=request.data, context=context)
+            serializer = serializers.CreateTicketSerializer(data=request.data, context=context)
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            return Response({"success": "Ticket(s) created successfully"})
+            # return Response({"success": "Ticket(s) created successfully"})
+            serialized_data = serializer.data
+            redirect_url = reverse('users:create_purchase', args=[serialized_data])
+            return HttpResponseRedirect(redirect_url)
 
         return Response(serializer.errors)
+
+    def put(self, request, *args, **kwargs):
+        """
+        Updates status of ticket to buy.
+        """
+        ticket = models.Ticket.objects.get(id=request.data.get('id'))
+        if isinstance(request.data, list):
+            serializer = serializers.UpdateTicketSerializer(ticket, data=request.data, many=True)
+        else:
+            serializer = serializers.UpdateTicketSerializer(ticket, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 

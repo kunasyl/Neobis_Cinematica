@@ -23,17 +23,18 @@ class RetrieveTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Ticket
         fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status')
-        depth = 1
+        # depth = 1
 
 
-class TicketSerializer(serializers.ModelSerializer):
+class CreateTicketSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
-    showtime_id = serializers.IntegerField(read_only=True)
-    seat_id = serializers.IntegerField(read_only=True)
+    showtime_id = serializers.IntegerField(source='showtime.id', read_only=True)
+    seat_id = serializers.IntegerField(source='seat.id', read_only=True)
     row = serializers.IntegerField(write_only=True)
     place = serializers.IntegerField(write_only=True)
     price_age = serializers.ChoiceField(choices=choices.PriceAges.choices)
-    user_id = serializers.UUIDField(read_only=True)
+    user_id = serializers.UUIDField(source='user.id', read_only=True)
+    status = serializers.ChoiceField(choices=choices.TicketStatuses.choices, read_only=True)
 
     class Meta:
         model = models.Ticket
@@ -41,7 +42,7 @@ class TicketSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Create a ticket with additionally creating a seat.
+        Create a ticket with additionally creating a seat for reserving only.
         """
         showtime_id = self.context.get('showtime_id')
         showtime = models.Showtime.objects.get(id=showtime_id)
@@ -66,3 +67,24 @@ class TicketSerializer(serializers.ModelSerializer):
         )
 
         return ticket
+
+
+class UpdateTicketSerializer(serializers.ModelSerializer):
+    """
+    Used for updating status of ticket and creates Purchase.
+    """
+    id = serializers.UUIDField(read_only=True)
+    showtime_id = serializers.IntegerField(read_only=True)
+    seat_id = serializers.IntegerField(read_only=True)
+    price_age = serializers.ChoiceField(choices=choices.PriceAges.choices, read_only=True)
+    user_id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = models.Ticket
+        fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status')
+
+    def update(self, instance, validated_data):
+        instance.status = validated_data.get('status', instance.status)
+        instance.save()
+
+        return instance

@@ -120,7 +120,7 @@ class Discount(models.Model):
         verbose_name=_('Пользователь')
     )
     tickets_bought = models.PositiveIntegerField(verbose_name=_('Количество купленных билетов'))
-    discount_count = models.FloatField(default=0, verbose_name='Сумма бонусов')
+    discount_count = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='Сумма бонусов')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -143,7 +143,6 @@ class PurchaseHistory(models.Model):
     )
     pay_status = models.CharField(
         choices=choices.PayStatuses.choices,
-        default=choices.PayStatuses.Waiting,
         max_length=50,
         verbose_name=_('Статус покупки')
     )
@@ -153,8 +152,9 @@ class PurchaseHistory(models.Model):
         related_name='user_purchases',
         verbose_name=_('Пользователь')
     )
-    discount_used = models.PositiveIntegerField(verbose_name=_('Сумма использованных бонусов'))
-    discount_added = models.PositiveIntegerField(verbose_name=_('Сумма дополненных бонусов'))
+    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Сумма'))
+    discount_used = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Сумма использованных бонусов'))
+    discount_added = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Сумма дополненных бонусов'))
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

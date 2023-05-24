@@ -10,4 +10,4 @@ class PriceAges(models.TextChoices):
 class TicketStatuses(models.TextChoices):
     Reserved = 'Бронь'
     Bought = 'Куплено'
-    Returned = 'Возвращено'
+    # Returned = 'Возвращено'

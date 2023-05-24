@@ -11,4 +11,6 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('feedbacks/', views.FeedbackView.as_view(), name='feedbacks'),
     path('feedbacks/create/', views.CreateFeedbackView.as_view(), name='create_feedback'),
+    path('purchases/', views.PurchaseView.as_view(), name='purchases'),
+    path('purchases/create/', views.CreatePurchaseView.as_view(), name='create_purchase'),
 ]

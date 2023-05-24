@@ -38,3 +38,10 @@ class FeedbackSerializer(serializers.Serializer):
         )
 
         return feedback
+
+
+class PurchaseSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.PurchaseHistory
+        fields = ('id', 'ticket_id', 'pay_status', 'user_id', 'price', 'discount_used', 'discount_added')
