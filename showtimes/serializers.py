@@ -7,6 +7,7 @@ from users import models as users_models
 
 class ShowtimeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
+
     # sold_tickets_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -20,10 +21,38 @@ class ShowtimeSerializer(serializers.ModelSerializer):
 
 
 class RetrieveTicketSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()
+    # total_price = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Ticket
-        fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status')
+        fields = ('id', 'showtime_id', 'seat_id', 'price_age', 'user_id', 'status', 'price')
         # depth = 1
+
+    def get_price(self, obj):
+        """
+        Calculates total sum of the tickets.
+        """
+        showtime = models.Showtime.objects.get(id=obj.showtime_id.id)
+        price = self.get_status_price(status_name=obj.price_age, showtime_obj=showtime)
+
+        return price
+
+    # def get_total_price(self, obj):
+    #     queryset = obj.objects.all()
+    #     total_price = sum(item.price for item in queryset)
+    #     return total_price
+
+    @staticmethod
+    def get_status_price(status_name: str, showtime_obj: models.Showtime):
+        if status_name == choices.PriceAges.Adult:
+            return showtime_obj.price_adult
+        if status_name == choices.PriceAges.Child:
+            return showtime_obj.price_child
+        if status_name == choices.PriceAges.Student:
+            return showtime_obj.price_student
+        if status_name == choices.PriceAges.Vip:
+            return showtime_obj.price_vip
 
 
 class CreateTicketSerializer(serializers.ModelSerializer):

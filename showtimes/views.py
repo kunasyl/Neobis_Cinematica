@@ -45,10 +45,10 @@ class TicketView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            ticket = models.Ticket.objects.get(user_id=request.user)
-        except self.model.DoesNotExist:
+            tickets = models.Ticket.objects.filter(user_id=request.user)
+        except models.Ticket.DoesNotExist:
             raise Http404("У вас нет билетов")
-        serializer = serializers.RetrieveTicketSerializer(ticket)
+        serializer = serializers.RetrieveTicketSerializer(tickets, many=True)
 
         return Response(serializer.data)
 
@@ -68,10 +68,11 @@ class TicketView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            # return Response({"success": "Ticket(s) created successfully"})
-            serialized_data = serializer.data
-            redirect_url = reverse('users:create_purchase', args=[serialized_data])
+            # request.session['tickets'] = serializer.data
+            redirect_url = reverse('tickets', args=[kwargs['pk']])
+
             return HttpResponseRedirect(redirect_url)
+            # return Response(serializer.data)
 
         return Response(serializer.errors)
 

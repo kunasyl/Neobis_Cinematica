@@ -5,6 +5,7 @@ class PriceAges(models.TextChoices):
     Adult = 'Взрослый'
     Child = 'Детский'
     Student = 'Студенческий'
+    Vip = 'Вип'
 
 
 class TicketStatuses(models.TextChoices):
