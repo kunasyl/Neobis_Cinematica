@@ -142,15 +142,22 @@ class PurchaseSerializer(serializers.ModelSerializer):
         discount_used = validated_data.pop('discount_used', None)
         discount_used = self.validate_used_discount(user_id=user_id, wanted_discount=discount_used)
 
-        discount = self.count_discount(price)
+        discount_added = self.count_discount(price)
 
         purchase = models.PurchaseHistory.objects.create(
             ticket_id=ticket,
             user_id=user,
             price=price,
             discount_used=discount_used,
-            discount_added=discount
+            discount_added=discount_added
         )
+
+        # Update discount of the user
+        discount = users_models.Discount.objects.get(user_id=user)
+        discount.tickets_bought += 1
+        discount.discount_count -= discount_used
+        discount.discount_count += discount_added
+        discount.save()
 
         return purchase
 
@@ -162,5 +169,5 @@ class PurchaseSerializer(serializers.ModelSerializer):
         return wanted_discount
 
     @staticmethod
-    def count_discount(price):
+    def count_discount(price) -> Decimal:
         return price*Decimal(0.03)

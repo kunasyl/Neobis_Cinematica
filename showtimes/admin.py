@@ -3,6 +3,11 @@ from django.contrib import admin
 from . import models
 
 
+class PurchaseHistoryInline(admin.TabularInline):
+    model = models.PurchaseHistory
+    extra = 1
+
+
 class TicketInline(admin.TabularInline):
     model = models.Ticket
     extra = 1
@@ -16,4 +21,5 @@ class ShowtimeAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.Ticket)
+admin.site.register(models.PurchaseHistory)
 admin.site.register(models.Showtime, ShowtimeAdmin)

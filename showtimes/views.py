@@ -3,12 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from django.http import Http404
-from rest_framework import status
+from decimal import Decimal
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.db.models import Sum
 
 from . import models, serializers, permissions, choices
+from users.models import Discount
 
 
 class ShowtimeView(ListCreateAPIView):
@@ -73,7 +74,6 @@ class TicketView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             # request.session['tickets'] = serializer.data
-            print('serializer.data', serializer.data)
             redirect_url = reverse('tickets', args=[kwargs['pk']])
 
             return HttpResponseRedirect(redirect_url)
@@ -111,6 +111,9 @@ class PurchaseView(APIView):
             serializer = serializers.PurchaseSerializer(data=request.data, context=context)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
+
+                ticket.status = choices.TicketStatuses.Bought
+                ticket.save()
             #     return Response({"success": "Purchase created successfully"})
 
             # return Response(serializer.errors)

@@ -25,7 +25,7 @@
 
 Для получения token отправьте POST запрос на `users/token/` с данными пользователя.
 
-Для создания билета в `showtimes/1/tickets/reserve/` (c JWT token):
+Для создания билета в `<int:pk>/tickets/reserve/` (c JWT token):
 ```JSON
 {
     "price_age": "Студенческий",
@@ -49,7 +49,7 @@
 ]
 ```
 
-Для обновления нескольких билетов `showtimes/<int:pk>/tickets/update/` (c JWT token):
+Для обновления нескольких билетов `<int:pk>/tickets/update/` (c JWT token):
 ```JSON
 [
     {
@@ -73,7 +73,7 @@
 }
 ```
 
-Для создания фильма `movies/``:
+Для создания фильма `movies/`:
 ```JSON
 {
     "title": "Все страхи Бо",
