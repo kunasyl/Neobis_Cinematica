@@ -12,3 +12,9 @@ class TicketStatuses(models.TextChoices):
     Reserved = 'Бронь'
     Bought = 'Куплено'
     # Returned = 'Возвращено'
+
+
+class PayStatuses(models.TextChoices):
+    Paid = 'Оплачено'
+    # Waiting = 'В ожидании'
+    # Declined = 'Покупка отменена'

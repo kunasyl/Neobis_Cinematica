@@ -93,3 +93,33 @@ class Ticket(models.Model):
         ordering = ("-created_at",)
         verbose_name = _('Билет')
         verbose_name_plural = _('Билеты')
+
+
+class PurchaseHistory(models.Model):
+    id = models.AutoField(primary_key=True)
+    ticket_id = models.OneToOneField(
+        to=Ticket,
+        on_delete=models.CASCADE,
+        related_name='ticket_purchases',
+        verbose_name=_('Пользователь')
+    )
+    user_id = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name='user_purchases',
+        verbose_name=_('Пользователь')
+    )
+    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Сумма'))
+    discount_used = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Сумма использованных бонусов'))
+    discount_added = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_('Сумма дополненных бонусов'))
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _('История покупок')
+        verbose_name_plural = _('Истории покупок')
+
+    def __str__(self):
+        return f"{self.ticket_id}, {self.user_id}"

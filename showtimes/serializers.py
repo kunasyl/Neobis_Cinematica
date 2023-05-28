@@ -1,8 +1,11 @@
 from rest_framework import serializers
+from decimal import Decimal
 
-from . import models, choices
+from . import models, choices, services
 from cinemas import models as cinemas_models
 from users import models as users_models
+
+services = services.ShowtimeServices()
 
 
 class ShowtimeSerializer(serializers.ModelSerializer):
@@ -31,28 +34,11 @@ class RetrieveTicketSerializer(serializers.ModelSerializer):
 
     def get_price(self, obj):
         """
-        Calculates total sum of the tickets.
+        Calculates ticket price.
         """
-        showtime = models.Showtime.objects.get(id=obj.showtime_id.id)
-        price = self.get_status_price(status_name=obj.price_age, showtime_obj=showtime)
+        price = services.get_price(obj=obj)
 
         return price
-
-    # def get_total_price(self, obj):
-    #     queryset = obj.objects.all()
-    #     total_price = sum(item.price for item in queryset)
-    #     return total_price
-
-    @staticmethod
-    def get_status_price(status_name: str, showtime_obj: models.Showtime):
-        if status_name == choices.PriceAges.Adult:
-            return showtime_obj.price_adult
-        if status_name == choices.PriceAges.Child:
-            return showtime_obj.price_child
-        if status_name == choices.PriceAges.Student:
-            return showtime_obj.price_student
-        if status_name == choices.PriceAges.Vip:
-            return showtime_obj.price_vip
 
 
 class CreateTicketSerializer(serializers.ModelSerializer):
@@ -117,3 +103,64 @@ class UpdateTicketSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class PurchaseSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    ticket_id = serializers.UUIDField(source='purchasehistory.ticket_id', read_only=True)
+    pay_status = serializers.MultipleChoiceField(choices=choices.PayStatuses.choices, read_only=True)
+    user_id = serializers.UUIDField(source='user.id', read_only=True)
+    price = serializers.DecimalField(
+        source='purchasehistory.price',
+        max_digits=8,
+        decimal_places=2,
+        read_only=True
+    )
+    discount_added = serializers.DecimalField(
+        source='purchasehistory.discount_added',
+        max_digits=8,
+        decimal_places=2,
+        read_only=True
+    )
+
+    class Meta:
+        model = models.PurchaseHistory
+        # fields = ('id', 'ticket_id', 'pay_status', 'user_id', 'price', 'discount_used', 'discount_added')
+        fields = '__all__'
+
+    def create(self, validated_data):
+        """
+        Create a purchase.
+        """
+        ticket_id = self.context.get('ticket_id')
+        ticket = models.Ticket.objects.get(id=ticket_id)
+
+        user_id = ticket.user_id
+        user = models.User.objects.get(id=user_id.id)
+        price = services.get_price(obj=ticket)
+
+        discount_used = validated_data.pop('discount_used', None)
+        discount_used = self.validate_used_discount(user_id=user_id, wanted_discount=discount_used)
+
+        discount = self.count_discount(price)
+
+        purchase = models.PurchaseHistory.objects.create(
+            ticket_id=ticket,
+            user_id=user,
+            price=price,
+            discount_used=discount_used,
+            discount_added=discount
+        )
+
+        return purchase
+
+    @staticmethod
+    def validate_used_discount(user_id, wanted_discount):
+        discount = users_models.Discount.objects.get(user_id=user_id.id)
+        if wanted_discount <= discount.discount_count:
+            return 0
+        return wanted_discount
+
+    @staticmethod
+    def count_discount(price):
+        return price*Decimal(0.03)

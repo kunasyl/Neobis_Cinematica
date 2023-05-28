@@ -1,4 +1,31 @@
-Для создания билета в `showtimes/1/tickets/` (c JWT token):
+## Cinematica
+**Cinematica** - REST API приложение онлайн букинга билетов, написанный на Django Rest Framework.
+
+### Структура:
+Приложение состоит из:
+- `users` - содержит функционал JWT авторизации/регистрации
+- `showtimes`
+- `movies`
+- `cinemas`
+
+### Установка
+Проект написан на django rest framework.
+
+В `requirements.txt` указаны все нужные пакеты.
+
+### Использование
+Для создания пользователя отправьте POST запрос на `users/create/`:
+```JSON
+{
+    "email": "hello@mail.ru",
+    "username": "hello",
+    "password": "hello123"
+}
+```
+
+Для получения token отправьте POST запрос на `users/token/` с данными пользователя.
+
+Для создания билета в `showtimes/1/tickets/reserve/` (c JWT token):
 ```JSON
 {
     "price_age": "Студенческий",

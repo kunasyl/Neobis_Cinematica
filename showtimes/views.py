@@ -6,8 +6,9 @@ from django.http import Http404
 from rest_framework import status
 from django.urls import reverse
 from django.http import HttpResponseRedirect
+from django.db.models import Sum
 
-from . import models, serializers, permissions
+from . import models, serializers, permissions, choices
 
 
 class ShowtimeView(ListCreateAPIView):
@@ -45,7 +46,10 @@ class TicketView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            tickets = models.Ticket.objects.filter(user_id=request.user)
+            tickets = models.Ticket.objects.filter(
+                user_id=request.user,
+                status=choices.TicketStatuses.Reserved
+            )
         except models.Ticket.DoesNotExist:
             raise Http404("У вас нет билетов")
         serializer = serializers.RetrieveTicketSerializer(tickets, many=True)
@@ -69,6 +73,7 @@ class TicketView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             # request.session['tickets'] = serializer.data
+            print('serializer.data', serializer.data)
             redirect_url = reverse('tickets', args=[kwargs['pk']])
 
             return HttpResponseRedirect(redirect_url)
@@ -76,22 +81,41 @@ class TicketView(APIView):
 
         return Response(serializer.errors)
 
-    def put(self, request, *args, **kwargs):
+
+class PurchaseView(APIView):
+    model = models.PurchaseHistory
+    permission_classes = (permissions.IsTicketOwner,)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            purchases = self.model.objects.filter(user_id=request.user)
+        except self.model.DoesNotExist:
+            raise Http404("У вас нет покупок.")
+        serializer = serializers.PurchaseSerializer(purchases, many=True)
+
+        return Response(serializer.data)
+
+    def post(self, request):
         """
-        Updates status of ticket to buy.
+        Create Purchase.
         """
-        ticket = models.Ticket.objects.get(id=request.data.get('id'))
-        if isinstance(request.data, list):
-            serializer = serializers.UpdateTicketSerializer(ticket, data=request.data, many=True)
-        else:
-            serializer = serializers.UpdateTicketSerializer(ticket, data=request.data)
+        tickets = models.Ticket.objects.filter(
+            user_id=request.user,
+            status=choices.TicketStatuses.Reserved
+        )
 
-        if serializer.is_valid():
-            serializer.save()
+        for ticket in tickets:
+            context = {
+                'ticket_id': ticket.id,
+            }
+            serializer = serializers.PurchaseSerializer(data=request.data, context=context)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+            #     return Response({"success": "Purchase created successfully"})
 
-            return Response(serializer.data)
+            # return Response(serializer.errors)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        redirect_url = reverse('purchases')
+        return HttpResponseRedirect(redirect_url)
 
 
