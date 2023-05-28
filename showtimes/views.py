@@ -3,13 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from django.http import Http404
-from decimal import Decimal
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.db.models import Sum
+from django_filters import rest_framework as filters
+from rest_framework.filters import OrderingFilter
+from django.db.models import Sum, Max, FloatField
 
 from . import models, serializers, permissions, choices
-from users.models import Discount
 
 
 class ShowtimeView(ListCreateAPIView):
@@ -73,11 +73,9 @@ class TicketView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            # request.session['tickets'] = serializer.data
             redirect_url = reverse('tickets', args=[kwargs['pk']])
 
             return HttpResponseRedirect(redirect_url)
-            # return Response(serializer.data)
 
         return Response(serializer.errors)
 
@@ -85,15 +83,20 @@ class TicketView(APIView):
 class PurchaseView(APIView):
     model = models.PurchaseHistory
     permission_classes = (permissions.IsTicketOwner,)
+    filter_backends = [filters.DjangoFilterBackend, OrderingFilter]
 
     def get(self, request, *args, **kwargs):
         try:
             purchases = self.model.objects.filter(user_id=request.user)
+            total_price = purchases.aggregate(total_price=Sum("price", output_field=FloatField()))['total_price']
         except self.model.DoesNotExist:
             raise Http404("У вас нет покупок.")
-        serializer = serializers.PurchaseSerializer(purchases, many=True)
+        serializer = serializers.RetrievePurchaseSerializer(purchases, many=True)
 
-        return Response(serializer.data)
+        return Response({
+            'purchases': serializer.data,
+            'total_price': total_price
+        })
 
     def post(self, request):
         """
@@ -114,9 +117,6 @@ class PurchaseView(APIView):
 
                 ticket.status = choices.TicketStatuses.Bought
                 ticket.save()
-            #     return Response({"success": "Purchase created successfully"})
-
-            # return Response(serializer.errors)
 
         redirect_url = reverse('purchases')
         return HttpResponseRedirect(redirect_url)

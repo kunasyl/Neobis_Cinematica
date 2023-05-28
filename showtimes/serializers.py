@@ -11,21 +11,15 @@ services = services.ShowtimeServices()
 class ShowtimeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
 
-    # sold_tickets_count = serializers.SerializerMethodField()
-
     class Meta:
         model = models.Showtime
         fields = ('id', 'movie_id', 'date', 'room_id', 'cinema_id', 'tickets_sold',
                   'price_adult', 'price_child', 'price_student', 'price_vip')
         # depth = 1
 
-    # def get_sold_tickets_count(self, obj):
-    #     return obj.showtime_tickets.count()
-
 
 class RetrieveTicketSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
-    # total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Ticket
@@ -105,6 +99,19 @@ class UpdateTicketSerializer(serializers.ModelSerializer):
         return instance
 
 
+class RetrievePurchaseSerializer(serializers.ModelSerializer):
+    # total_price = serializers.SerializerMethodField()
+
+    # def get_total_price(self, obj):
+    #     queryset = models.PurchaseHistory.objects.filter(user_id=obj.user_id)
+    #     aggregated_data = queryset.aggregate(total_price=Sum("price", output_field=FloatField()))
+    #     return aggregated_data['total_price']
+
+    class Meta:
+        model = models.PurchaseHistory
+        fields = '__all__'
+
+
 class PurchaseSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     ticket_id = serializers.UUIDField(source='purchasehistory.ticket_id', read_only=True)
@@ -125,7 +132,6 @@ class PurchaseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PurchaseHistory
-        # fields = ('id', 'ticket_id', 'pay_status', 'user_id', 'price', 'discount_used', 'discount_added')
         fields = '__all__'
 
     def create(self, validated_data):
